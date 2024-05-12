@@ -133,11 +133,6 @@ class LPSolver:
 
 
 def build_tableau() -> np.ndarray:
-    # TODO: csvから読み込むとか，LPファイルを読み込むとか
-    #   この部分は本質ではないので，一旦ハードコーディング
-    # TODO: 初期解が実行不能，退化，非有界 などの例を追加
-    #   https://personal.utdallas.edu/~scniu/OPRE-6201/documents/LP10-Special-Situations.pdf
-
     # format:
     # 今野浩. 線形計画法. 日科技連. の形式に従う
     # -z0, -z, x1, ..., x_{n+m}
