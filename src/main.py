@@ -1,5 +1,6 @@
 import numpy as np
 import fractions
+import enum
 
 
 """
@@ -8,6 +9,12 @@ NOTE
 - 1段階の単体法なので，初期解（原点）が実行不能の場合は対応していない
 - 最小添字規則 (Bland's rule) によってpivotを選択しているので，収束は遅いが巡回はしない
 """
+
+
+class Status(enum.Enum):
+    OPTIMAL = "optimal"
+    INFEASIBLE = "infeasible"
+    UNBOUNDED = "unbounded"
 
 
 class LPSolver:
@@ -100,12 +107,12 @@ class LPSolver:
             solution[f"x({n})"] = 0
         return solution
 
-    def solve(self, tableau: np.ndarray) -> None:
+    def solve(self, tableau: np.ndarray) -> Status:
         print("tableau:")
         print(tableau)
         if self.is_infeasible(tableau):
             print("初期解が実行不能です．二段階単体法を検討してください．")
-            return
+            return Status.INFEASIBLE
         while True:
             if self.is_optimal(tableau):
                 print("最適解に到達しました．")
@@ -113,7 +120,7 @@ class LPSolver:
             pivot_col = self.get_pivot_column(tableau)
             if self.is_unbounded(tableau, pivot_col):
                 print("非有界です．")
-                break
+                return Status.UNBOUNDED
             pivot_row = self.get_pivot_row(tableau, pivot_col)
             print(f"pivot (row, col)=({pivot_row}, {pivot_col}), pivot={tableau[pivot_row, pivot_col]}")
             tableau = self.pivot_operation(tableau, pivot_row, pivot_col)
@@ -122,7 +129,7 @@ class LPSolver:
         print(tableau)
         print("最適値 z =", self.get_optimal_value(tableau))
         print("最適解 x =", self.get_optimal_solution(tableau))
-        return
+        return Status.OPTIMAL
 
 
 def build_tableau() -> np.ndarray:
@@ -142,7 +149,7 @@ def build_tableau() -> np.ndarray:
         # np.ndarray() で生成してもエラーにはならないけど推奨されていないらしい
         # https://linus-mk.hatenablog.com/entry/numpy_array_ndarray_difference
         [
-            [0, 1, 3, 2, 4, 0, 0, 0],
+            [0, -1, 3, 2, 4, 0, 0, 0],
             [4, 0, 1, 1, 2, 1, 0, 0],
             [5, 0, 2, 0, 2, 0, 1, 0],
             [7, 0, 2, 1, 3, 0, 0, 1],
@@ -164,7 +171,23 @@ def build_tableau() -> np.ndarray:
     return tableau
 
 
+def read_tableau() -> np.ndarray:
+    # format:
+    # 今野浩. 線形計画法. 日科技連. の形式に従う
+    # -z0, -z, x1, ..., x_{n+m}
+    # max型の等式標準形を入力とする
+
+    m = int(input())  # number of const.
+    tableau = np.array(
+        [list(map(int, input().split(","))) for _ in range(m + 1)],
+        dtype=float
+    )
+    return tableau
+
+
 if __name__ == '__main__':
-    tableau = build_tableau()
+    # tableau = build_tableau()
+    tableau = read_tableau()
     solver = LPSolver()
-    solver.solve(tableau)
+    status = solver.solve(tableau)
+    print(f"{status=}")
